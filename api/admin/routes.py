@@ -12,6 +12,8 @@ admin = Blueprint('admin', __name__)
 @admin.route('/authenticate', methods=['POST'])
 def login():
     data = request.get_json()
+    if data is None:
+        return jsonify('No email or password provided.'), 400
     user = verify_password(data['email'], data['password'])
     if user is None:
         return error_response(400)
@@ -39,7 +41,7 @@ def register():
         return jsonify({'message': 'success', 'status_code': 201})
         
     else:
-        return jsonify({'message': 'Error, something happened', 'status_code': 400})
+        return jsonify({'message': 'Error, something happened'}), 400
 
 
 @admin.route('/tickets')

@@ -3,9 +3,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-class Config:
+class Config(object):
     SECRET_KEY = os.getenv('SECRET_KEY')
     FLASK_APP = os.getenv('FLASK_APP')
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
+    
+
+class DevelopmentConfig(Config):
     DEBUG = os.getenv('DEBUG')
+
+
+class TestingConfig(Config):
+    SECRET_KEY = '8dad8aeaffc12e82'
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL') or 'sqlite://'
+
+
+config = {
+    'development': DevelopmentConfig,
+    'testing': TestingConfig,
+    'default': DevelopmentConfig
+}
