@@ -69,7 +69,7 @@ class ProjectAPI(MethodView):
     """api for projects endpoint '/projects/...' """
     decators =[token_auth.login_required(role='admin')]
 
-    def post(self, project_id):
+    def get(self, project_id):
         if project_id is None:
             # return all projects
             schema = ProjectSchema(many=True)
@@ -90,7 +90,10 @@ class ProjectAPI(MethodView):
 
     def delete(self, project_id):
         # delete project
-        pass
+        project = Project.query.get_or_404(project_id)
+        db.session.delete(project)
+        db.session.commit()
+        return jsonify('Project deleted.'), 200
 
 
 class TicketApi(MethodView):
@@ -117,16 +120,18 @@ class TicketApi(MethodView):
         data_label = data['label']
         data_description = data['description']
         data_status = data['status']
-        data_created_by = token_auth.current_user()
+        data_created_by = token_auth.current_user().id
+        data_project_id = data['project_id']
         # print(created_by)
         ticket_label_exist = Ticket.query.filter_by(label=data_label).first()
         if ticket_label_exist:
             return jsonify('A ticket with the same label exists.'), 400
         else:
-            ticket = Ticket(label=data_label, description=data_description, status=data_status, created_by=data_created_by)
+            ticket = Ticket(label=data_label, description=data_description, status=data_status, 
+                                created_by=data_created_by, project_id=data_project_id)
             db.session.add(ticket)
             db.session.commit()
-        pass
+            return jsonify(f'TIcket with label "{ticket.label}" created.'), 200
 
     def put(self, ticket_id):
         # update ticket
@@ -137,6 +142,7 @@ class TicketApi(MethodView):
         ticket = Ticket.query.get_or_404(ticket_id)
         db.session.delete()
         db.session.commit()
+        return jsonify(f'Ticket with label "{ticket.label}" deleted.'), 200
 
 register_api(UserAPI, 'user_api', '/users/', pk='user_id')
 register_api(ProjectAPI, 'project_api', '/projects/', pk='project_id')
