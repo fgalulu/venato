@@ -7,6 +7,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         model = User
         exclude = ("password", "created_at", "updated_at")
 
+    role = ma.Function(lambda obj: obj.get_role(), dump_only=True)
 
 class ProjectSchema(ma.SQLAlchemyAutoSchema):
     class Meta:

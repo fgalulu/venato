@@ -11,7 +11,8 @@ class Config(object):
     
 
 class DevelopmentConfig(Config):
-    DEBUG = os.getenv('DEBUG')
+    DEGUB = True
+    # FLASK_ENV = os.getenv('FLASK_ENV')
 
 
 class TestingConfig(Config):

@@ -4,6 +4,11 @@ from datetime import datetime, timedelta
 import base64
 import os
 
+class Role:
+    ADMIN = 200
+    PROJECT_MANAGER = 201
+    DEVELOPER = 202
+    SUBMITTER = 203
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,8 +18,20 @@ class User(db.Model):
     password = db.Column(db.String(150), nullable=False)
     token = db.Column(db.String(32), index=True, unique=True)
     token_expiration = db.Column(db.DateTime)
+    role = db.Column(db.SmallInteger, nullable=False, default= Role.SUBMITTER)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+
+    def get_role(self):
+        if self.role == Role.ADMIN:
+            return 'admin'
+        elif self.role == Role.PROJECT_MANAGER:
+            return 'project manager'
+        elif self.role == Role.DEVELOPER:
+            return 'developer'
+        elif self.role == Role.SUBMITTER:
+            return 'submitter'
+
 
     def get_name(self):
         name = self.first_name + ' ' + self.last_name
@@ -23,6 +40,9 @@ class User(db.Model):
     def get_email(self):
         email = self.email
         return email
+
+    # def get_role(self):
+    #     return role
 
     def check_password(self, pwd):
         return bcrypt.check_password_hash(self.password, pwd)
@@ -68,7 +88,7 @@ class Ticket(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     label = db.Column(db.String(250), nullable=False)
     description = db.Column(db.Text)
-    status = db.Column(db.String(250), nullable=False)
+    status = db.Column(db.String(250), nullable=False, default='open')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
@@ -97,3 +117,12 @@ class UserProjectManagement(db.Model):
     def get_project(self):
         return self.project.get_name()
 
+
+class UserTicketManagement(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user = db.relationship('User', backref='assingee', cascade="all,delete", foreign_keys=[user_id])
+    ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
+    ticket = db.relationship('Ticket', backref='ticket', cascade="all,delete")
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    author = db.relationship('User', backref='assigner', cascade="all,delete", foreign_keys=[created_by])
