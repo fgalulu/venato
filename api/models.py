@@ -76,7 +76,7 @@ class Project(db.Model):
     supervised_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     supervisor = db.relationship('User', backref='supervisor_project', cascade="all,delete", foreign_keys=[supervised_by])
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    author = db.relationship('User', backref='author_project', cascade="all,delete", foreign_keys=[created_by])
+    project_author = db.relationship('User', backref='project_author', cascade="all,delete", foreign_keys=[created_by])
     archived = db.Column(db.Boolean)
 
     def get_name(self):
@@ -92,7 +92,7 @@ class Ticket(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    author = db.relationship('User', backref='author_ticket', cascade="all,delete", foreign_keys=[created_by])
+    ticket_author = db.relationship('User', backref='ticket_author', cascade="all,delete", foreign_keys=[created_by])
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     project = db.relationship('Project', backref='project', cascade="all,delete")
 

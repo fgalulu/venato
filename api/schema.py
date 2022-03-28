@@ -14,8 +14,9 @@ class ProjectSchema(ma.SQLAlchemyAutoSchema):
         model = Project
         exclude = ("created_at", "updated_at")
 
-    author_name = ma.Function(lambda obj: obj.author.get_name(), dump_only=True)
-    supervisor_name = ma.Function(lambda obj: obj.supervisor.get_name(), dump_only=True)
+    project_author = ma.Nested(UserSchema)
+    supervisor = ma.Nested(UserSchema)
+    # tickets = ma.Nested(TicketSchema)
 
 
 
@@ -25,5 +26,5 @@ class TicketSchema(ma.SQLAlchemyAutoSchema):
         exclude = ("created_at", "updated_at")
         # include_fk = True
 
-    project_name = ma.Function(lambda obj: obj.project.get_name(), dump_only=True)
-    author_name = ma.Function(lambda obj: obj.author.get_name(), dump_only=True)
+    project = ma.Nested(ProjectSchema)
+    ticket_author = ma.Nested(UserSchema)

@@ -56,6 +56,19 @@ class UserAPI(MethodView):
     
     def put(self, user_id):
         # update user
+        data = request.get_json()
+        user = User.query.get_or_404(user_id)
+        if data['first_name']:
+            user.first_name = data['first_name']
+        if data['last_name']:
+            user.last_name = data['last_name']
+        if data['email']:
+            user.email = data['email']
+        if data['password']:
+            pwd = bcrypt.generate_password_hash(data['password']).decode('utf-8')
+            user.password = pwd
+        db.session.commit()
+        return jsonify('User edited.'), 200
         pass
     
     def delete(self, user_id):
@@ -78,6 +91,7 @@ class ProjectAPI(MethodView):
         else: 
             schema = ProjectSchema()
             project = Project.query.get_or_404(project_id)
+            print(project)
             return jsonify(schema.dump(project)), 200
 
     def post(self):
