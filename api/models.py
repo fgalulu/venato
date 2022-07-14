@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 import base64
 import os
 
+
 class Role:
     ADMIN = 200
     PROJECT_MANAGER = 201
     DEVELOPER = 202
     SUBMITTER = 203
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -31,7 +33,6 @@ class User(db.Model):
             return 'developer'
         elif self.role == Role.SUBMITTER:
             return 'submitter'
-
 
     def get_name(self):
         name = self.first_name + ' ' + self.last_name
@@ -95,7 +96,6 @@ class Ticket(db.Model):
     ticket_author = db.relationship('User', backref='ticket_author', cascade="all,delete", foreign_keys=[created_by])
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     project = db.relationship('Project', backref='project', cascade="all,delete")
-
 
     def get_author(self):
         return self.author.get_email()

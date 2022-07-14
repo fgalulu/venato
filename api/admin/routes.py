@@ -2,12 +2,13 @@ import json
 from flask import Blueprint, jsonify, request
 from flask.views import MethodView
 from api import db, bcrypt
-from api.auth import token_auth
+from api.auth import multi_auth
 from api.models import Ticket, User, Project
 from api.schema import TicketSchema, UserSchema, ProjectSchema
 from .utils import generate_random_password
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
+
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
@@ -16,10 +17,18 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     admin.add_url_rule(f'{url}<{pk_type}:{pk}>', view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 
+@admin.route('/tokens')
+@multi_auth.login_required
+def get_token():
+    token = multi_auth.current_user().get_token()
+    db.sesssion.commit()
+    return jsonify({'token': token})
+
+
 class UserAPI(MethodView):
     """api endpoint for users '/users/...' """
     
-    decorators = [token_auth.login_required(role='admin')]
+    decorators = [multi_auth.login_required(role='admin')]
 
     def get(self, user_id):
         if user_id is None:
@@ -78,9 +87,10 @@ class UserAPI(MethodView):
         db.session.commit()
         return jsonify('Deleted successfully!'), 200
 
+
 class ProjectAPI(MethodView):
     """api for projects endpoint '/projects/...' """
-    decators =[token_auth.login_required(role='admin')]
+    decators =[multi_auth.login_required(role='admin')]
 
     def get(self, project_id):
         if project_id is None:
@@ -113,7 +123,7 @@ class ProjectAPI(MethodView):
 class TicketApi(MethodView):
     """api endpoint for tickets '/tickets/...' """
 
-    decorators = [token_auth.login_required(role='admin')]
+    decorators = [multi_auth.login_required(role='admin')]
 
     def get(self, ticket_id):
         if ticket_id is None:
@@ -134,7 +144,7 @@ class TicketApi(MethodView):
         data_label = data['label']
         data_description = data['description']
         data_status = data['status']
-        data_created_by = token_auth.current_user().id
+        data_created_by = multi_auth.current_user().id
         data_project_id = data['project_id']
         # print(created_by)
         ticket_label_exist = Ticket.query.filter_by(label=data_label).first()
@@ -157,6 +167,7 @@ class TicketApi(MethodView):
         db.session.delete()
         db.session.commit()
         return jsonify(f'Ticket with label "{ticket.label}" deleted.'), 200
+
 
 register_api(UserAPI, 'user_api', '/users/', pk='user_id')
 register_api(ProjectAPI, 'project_api', '/projects/', pk='project_id')

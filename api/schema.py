@@ -9,6 +9,7 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
 
     role = ma.Function(lambda obj: obj.get_role(), dump_only=True)
 
+
 class ProjectSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Project
@@ -17,7 +18,6 @@ class ProjectSchema(ma.SQLAlchemyAutoSchema):
     project_author = ma.Nested(UserSchema)
     supervisor = ma.Nested(UserSchema)
     # tickets = ma.Nested(TicketSchema)
-
 
 
 class TicketSchema(ma.SQLAlchemyAutoSchema):
