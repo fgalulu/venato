@@ -1,4 +1,4 @@
-from .models import Project, User, Ticket
+from .models import Project, User, Ticket, UserProjectManagement, UserTicketManagement
 from api import ma
 
 
@@ -17,6 +17,7 @@ class ProjectSchema(ma.SQLAlchemyAutoSchema):
 
     project_author = ma.Nested(UserSchema)
     supervisor = ma.Nested(UserSchema)
+    # user_assigned = ma.Nested(UserSchema, exclude=["role"])
     # tickets = ma.Nested(TicketSchema)
 
 
@@ -28,3 +29,21 @@ class TicketSchema(ma.SQLAlchemyAutoSchema):
 
     project = ma.Nested(ProjectSchema)
     ticket_author = ma.Nested(UserSchema)
+
+
+class UserTicketSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserTicketManagement
+        # exclude = ("updated_at")
+
+    user = ma.Nested(UserSchema)
+    ticket = ma.Nested(TicketSchema)
+
+
+class UserProjectSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserProjectManagement
+        # exclude = ("updated_at")
+
+    user = ma.Nested(UserSchema)
+    project = ma.Nested(ProjectSchema)

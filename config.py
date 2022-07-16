@@ -16,7 +16,7 @@ class DevelopmentConfig(Config):
 
 
 class TestingConfig(Config):
-    SECRET_KEY = '8dad8aeaffc12e82'
+    SECRET_KEY = 'jfsjnfofosnf5464oeoc'
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL') or 'sqlite://'
 

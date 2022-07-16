@@ -20,9 +20,13 @@ class User(db.Model):
     password = db.Column(db.String(150), nullable=False)
     token = db.Column(db.String(32), index=True, unique=True)
     token_expiration = db.Column(db.DateTime)
-    role = db.Column(db.SmallInteger, nullable=False, default= Role.SUBMITTER)
+    role = db.Column(db.SmallInteger, nullable=False, default=Role.SUBMITTER)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    ticket = db.relationship("Ticket", secondary="user_ticket_management", cascade='all, delete',
+                               lazy='dynamic', passive_deletes=True)
+    project = db.relationship("Project", secondary="user_project_management", cascade='all, delete',
+                               lazy='dynamic', passive_deletes=True)
 
     def get_role(self):
         if self.role == Role.ADMIN:
@@ -75,10 +79,12 @@ class Project(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
     supervised_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    supervisor = db.relationship('User', backref='supervisor_project', cascade="all,delete", foreign_keys=[supervised_by])
+    supervisor = db.relationship('User', backref='supervisor_project', foreign_keys=[supervised_by])
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    project_author = db.relationship('User', backref='project_author', cascade="all,delete", foreign_keys=[created_by])
+    project_author = db.relationship('User', backref='project_author', foreign_keys=[created_by])
     archived = db.Column(db.Boolean)
+    user_assigned = db.relationship("User", secondary="user_project_management", viewonly=True,
+                                    lazy='dynamic')
 
     def get_name(self):
         name = self.name
@@ -93,9 +99,11 @@ class Ticket(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
     created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    ticket_author = db.relationship('User', backref='ticket_author', cascade="all,delete", foreign_keys=[created_by])
+    ticket_author = db.relationship('User', backref='ticket_author', foreign_keys=[created_by])
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    project = db.relationship('Project', backref='project', cascade="all,delete")
+    project = db.relationship('Project', backref='project',)
+    user_assigned = db.relationship("User", secondary="user_ticket_management", viewonly=True,
+                                 lazy='dynamic')
 
     def get_author(self):
         return self.author.get_email()
@@ -107,9 +115,7 @@ class Ticket(db.Model):
 class UserProjectManagement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref='user', cascade="all,delete")
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
-    project = db.relationship('Project', backref='belongs', cascade="all,delete")
 
     def get_user(self):
         return self.user.get_name()
@@ -121,8 +127,4 @@ class UserProjectManagement(db.Model):
 class UserTicketManagement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    user = db.relationship('User', backref='assingee', cascade="all,delete", foreign_keys=[user_id])
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
-    ticket = db.relationship('Ticket', backref='ticket', cascade="all,delete")
-    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    author = db.relationship('User', backref='assigner', cascade="all,delete", foreign_keys=[created_by])

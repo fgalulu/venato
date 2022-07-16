@@ -7,7 +7,7 @@ from api.errors import error_response
 main = Blueprint('main', __name__)
 
 
-@main.route('/authenticate', methods=['POST'])
+@main.post('/authenticate')
 def login():
     data = request.get_json()
     if data is None:
@@ -20,12 +20,12 @@ def login():
     return jsonify({'message': 'success', 'token': token}), 200
 
 
-@main.route('/register', methods=['POST'])
+@main.post('/register')
 def register():
     data = request.get_json()
     print(data)
     pwd = data['password']
-    first_name= data['first_name']
+    first_name = data['first_name']
     last_name = data['last_name']
     email = data['email']
     user_exist = User.query.filter_by(email=email).first()
