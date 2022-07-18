@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
 from flask.views import MethodView
+from api import db
 from api.models import Project, Ticket, User, UserProjectManagement, UserTicketManagement
 from api.schema import TicketSchema, ProjectSchema, UserSchema
 from api.auth import multi_auth
