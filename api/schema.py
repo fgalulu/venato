@@ -17,7 +17,7 @@ class ProjectSchema(ma.SQLAlchemyAutoSchema):
 
     project_author = ma.Nested(UserSchema)
     supervisor = ma.Nested(UserSchema)
-    # user_assigned = ma.Nested(UserSchema, exclude=["role"])
+    # user_assigned = ma.HyperlinkRelated("admin.project_assigned", dict(project_id='<id>'))
     # tickets = ma.Nested(TicketSchema)
 
 
