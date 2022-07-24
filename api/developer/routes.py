@@ -30,7 +30,7 @@ class TicketApi(MethodView):
         else:
             # return all tickets
             schema = TicketSchema(many=True)
-            qry = UserTicketManagement()
+            qry = UserTicketManagement.query.filter_by(user_id=multi_auth.current_user())
             tickets_assigned = Ticket.query.filter(UserTicketManagement).all()
             return jsonify(schema.dump(tickets_assigned)), 200
 
@@ -72,45 +72,39 @@ class TicketApi(MethodView):
         return jsonify(f'Ticket with label {ticket.label} deleted.'), 200
 
 
+class UserAPI(MethodView):
+
+    decorators = [multi_auth.login_required(role='developer')]
+
+    def get(self, user_id):
+        if user_id:
+            schema = UserSchema(many=False)
+            user = User.query.get_or_404(user_id)
+            print(user.get_project())
+            return jsonify(schema.dump(user)), 200
+        else:
+            # return all tickets
+            # schema = TicketSchema(many=True)
+            # users = User.query.all()
+            # return jsonify(schema.dump(tickets_assigned)), 200
+            pass
+
+
+class ProjectAPI(MethodView):
+
+    decorators = [multi_auth.login_required(role='developer')]
+
+    def get(self, project_id):
+        if project_id:
+            schema = ProjectSchema()
+            project = Project.query.filter_by(user_assigned=multi_auth.current_user()).first()
+            return jsonify(schema.dump(project)), 200
+        else:
+            schema = ProjectSchema(many=True)
+            projects = Project.query.filter_by(user_assigned=multi_auth.current_user()).all()
+            return jsonify(schema.dump(projects)), 200
+
+
 register_api(TicketApi, 'ticket_api', '/tickets/', pk='ticket_id')
-
-#
-# @developer.route('/tickets')
-# @multi_auth.login_required
-# def tickets():
-#     schema = TicketSchema(many=True)
-#     tickets = Ticket.query.all()
-#     return jsonify(schema.dump(tickets)), 200
-
-
-@developer.route('/tickets/<int:ticket_id>')
-@multi_auth.login_required
-def ticket(ticket_id):
-    schema = TicketSchema(many=False)
-    ticket = Ticket.query.get_or_404(ticket_id)
-    print(ticket.get_project())
-    return jsonify(schema.dump(ticket)), 200
-
-
-@developer.route('/users/<int:user_id>')
-@multi_auth.login_required
-def user(user_id):
-    schema = UserSchema()
-    user = User.query.get_or_404(user_id)
-    return jsonify(schema.dump(user)), 200
-
-
-@developer.route('/projects')
-@multi_auth.login_required
-def projects():
-    schema = ProjectSchema(many=True)
-    projects = Project.query.all()
-    return jsonify(schema.dump(projects)), 200
-
-
-@developer.route('/projects/<int:project_id>')
-@multi_auth.login_required
-def project(project_id):
-    schema = ProjectSchema()
-    project = Project.query.get_or_404(project_id)
-    return jsonify(schema.dump(project)), 200
+register_api(UserAPI, 'user_api', '/user/', pk='user_id')
+register_api(ProjectAPI, 'project_api', '/project/', pk='project_id')
