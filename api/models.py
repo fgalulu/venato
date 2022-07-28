@@ -46,9 +46,6 @@ class User(db.Model):
         email = self.email
         return email
 
-    # def get_role(self):
-    #     return role
-
     def check_password(self, pwd):
         return bcrypt.check_password_hash(self.password, pwd)
 

@@ -84,9 +84,9 @@ class UserAPI(MethodView):
             return jsonify(schema.dump(user)), 200
         else:
             # return all tickets
-            # schema = TicketSchema(many=True)
-            # users = User.query.all()
-            # return jsonify(schema.dump(tickets_assigned)), 200
+            schema = UserSchema(many=True)
+            users = User.query.all()
+            return jsonify(schema.dump(users)), 200
             pass
 
 

@@ -4,6 +4,8 @@ from api.auth import verify_password
 from api.models import User
 from api.errors import error_response
 
+from jsonschema import validate
+
 main = Blueprint('main', __name__)
 
 
@@ -14,7 +16,7 @@ def login():
         return jsonify('No email or password provided.'), 400
     user = verify_password(data['email'], data['password'])
     if user is None:
-        return error_response(400)
+        return error_response(404)
     token = user.get_token()
     db.session.commit()
     return jsonify({'message': 'success', 'token': token}), 200
@@ -23,7 +25,8 @@ def login():
 @main.post('/register')
 def register():
     data = request.get_json()
-    print(data)
+    if data is None:
+        return jsonify('No email or password provided.'), 400
     pwd = data['password']
     first_name = data['first_name']
     last_name = data['last_name']
@@ -37,6 +40,6 @@ def register():
         db.session.add(user)
         db.session.commit()
         return jsonify({'message': 'success', 'status_code': 201})
-        
+
     else:
         return jsonify({'message': 'Error, something happened'}), 400
