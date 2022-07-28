@@ -1,6 +1,8 @@
 from flask import appcontext_popped
 import pytest
-from api import create_app, db
+from api import create_app, db, bcrypt
+from api.models import User
+
 
 @pytest.fixture()
 def app():
@@ -14,7 +16,16 @@ def app():
     db.drop_all()
     app_context.pop()
 
+
 @pytest.fixture()
 def client(app):
     return app.test_client()
 
+
+@pytest.fixture()
+def new_user(client):
+    pwd = bcrypt.generate_password_hash('Pass1234!').decode('utf-8')
+    user = User(first_name='first', last_name='last', email='one@example.com', password=pwd)
+    db.session.add(user)
+    db.session.commit()
+    yield user
