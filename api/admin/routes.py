@@ -17,11 +17,11 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     admin.add_url_rule(f'{url}<{pk_type}:{pk}>', view_func=view_func, methods=['GET', 'PUT', 'DELETE'])
 
 
-@admin.route('/tokens')
+@admin.route('/token')
 @multi_auth.login_required
 def get_token():
     token = multi_auth.current_user().get_token()
-    db.sesssion.commit()
+    db.session.commit()
     return jsonify({'token': token})
 
 
