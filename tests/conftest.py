@@ -1,7 +1,7 @@
 from flask import appcontext_popped
 import pytest
 from api import create_app, db, bcrypt
-from api.models import User, Role, Project, Ticket
+from api.models import User, Role, Project, Ticket, UserTicketManagement, UserProjectManagement
 
 
 @pytest.fixture()
@@ -72,3 +72,21 @@ def new_ticket(new_project, new_pm):
     db.session.add(ticket)
     db.session.commit()
     yield ticket
+
+
+@pytest.fixture()
+def new_user_ticket(new_ticket, new_user):
+    user_ticket = UserTicketManagement(user_id=new_user.id, ticket_id=new_ticket.id)
+
+    db.session.add(user_ticket)
+    db.session.commit()
+    yield user_ticket
+
+
+@pytest.fixture()
+def new_user_project(new_project, new_user):
+    user_project = UserProjectManagement(user_id=new_user.id, project_id=new_project.id)
+
+    db.session.add(user_project)
+    db.session.commit()
+    yield user_project

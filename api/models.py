@@ -103,7 +103,7 @@ class Ticket(db.Model):
                                  lazy='dynamic')
 
     def get_author(self):
-        return self.author.get_email()
+        return self.ticket_author.get_email()
 
     def get_project(self):
         return self.project.get_name()
@@ -125,3 +125,4 @@ class UserTicketManagement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ticket_id = db.Column(db.Integer, db.ForeignKey('ticket.id'), nullable=False)
+

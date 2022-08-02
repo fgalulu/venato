@@ -216,8 +216,9 @@ class UserTicketAPI(MethodView):
 
     def post(self):
         data = request.get_json()
-        user_ticket = UserTicketManagement(user_id=data['user_id'], ticket_id=data['ticket_id'],
-                                           author=multi_auth.current_user())
+        user = User.query.get_or_404(data['user_id'])
+        ticket = Ticket.query.get_or_404(data['ticket_id'])
+        user_ticket = UserTicketManagement(user_id=user.id, ticket_id=ticket.id)
         db.session.add(user_ticket)
         db.session.commit()
         return jsonify('success'), 200
@@ -257,7 +258,7 @@ class UserProjectAPI(MethodView):
         data = request.get_json()
         user = User.query.get_or_404(data['user_id'])
         project = Project.query.get_or_404(data['project_id'])
-        user_project = UserProjectManagement(user=user, project=project)
+        user_project = UserProjectManagement(user_id=user.id, project_id=project.id)
         db.session.add(user_project)
         db.session.commit()
         return jsonify('success'), 200
@@ -265,8 +266,10 @@ class UserProjectAPI(MethodView):
     def put(self, user_project_id):
         data = request.get_json()
         user_project = UserProjectManagement.query.get_or_404(user_project_id)
-        user_project.user_id = data['user_id']
-        user_project.project_id = data['project_id']
+        user = User.query.get_or_404(data['user_id'])
+        project = Project.query.get_or_404(data['project_id'])
+        user_project.user_id = user.id
+        user_project.project_id = project.id
         db.session.commit()
         return jsonify('success'), 200
 
