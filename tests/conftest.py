@@ -1,7 +1,7 @@
 from flask import appcontext_popped
 import pytest
 from api import create_app, db, bcrypt
-from api.models import User, Role, Project
+from api.models import User, Role, Project, Ticket
 
 
 @pytest.fixture()
@@ -63,3 +63,12 @@ def new_project(client, new_pm, new_admin):
     db.session.add(project)
     db.session.commit()
     yield project
+
+
+@pytest.fixture()
+def new_ticket(new_project, new_pm):
+    ticket = Ticket(label='ticket one', description='some description about the ticket',
+                    ticket_author=new_pm, project=new_project)
+    db.session.add(ticket)
+    db.session.commit()
+    yield ticket

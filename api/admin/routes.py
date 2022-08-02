@@ -5,6 +5,7 @@ from api import db, bcrypt
 from api.auth import multi_auth, token_auth, basic_auth
 from api.models import Ticket, User, Project, UserTicketManagement, UserProjectManagement
 from api.schema import TicketSchema, UserSchema, ProjectSchema, UserTicketSchema, UserProjectSchema
+from api.errors import error_response
 from .utils import generate_random_password
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
@@ -119,7 +120,7 @@ class ProjectAPI(MethodView):
             db.session.commit()
             return jsonify('success'), 200
         else:
-            return jsonify("Operation not allowed"), 404
+            return jsonify("Supervisor doesnt exist."), 404
 
     def put(self, project_id):
         # update project
@@ -131,9 +132,8 @@ class ProjectAPI(MethodView):
             project.description = data['desc']
             project.supervisor = supervisor
             db.session.commit()
-            return jsonify('sucecss'), 200
-        else:
-            return jsonify("Operation not allowed"), 404
+            return jsonify('success'), 200
+        return jsonify("Supervisor doesnt exist."), 404
 
     def delete(self, project_id):
         # delete project
