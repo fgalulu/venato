@@ -287,9 +287,9 @@ register_api(UserTicketAPI, 'user_ticket_api', '/user-tickets/', pk='user_ticket
 register_api(UserProjectAPI, 'user-project_api', '/user-projects/', pk='user_project_id')
 
 
-@admin.get('/project/<int:project_id>/users')
+@admin.get('/projects/<int:project_id>/users')
 @multi_auth.login_required(role='admin')
-def project_assigned(project_id):
+def project_assignee(project_id):
     project = Project.query.get_or_404(project_id)
     users = User.query.join(UserProjectManagement).filter(UserProjectManagement.project_id == project.id).all()
     schema = UserSchema(many=True)

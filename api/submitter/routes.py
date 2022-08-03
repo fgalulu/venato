@@ -8,7 +8,7 @@ from api.models import Ticket
 from api.schema import TicketSchema
 
 
-submitter = Blueprint('submitter', __name__)
+submitter = Blueprint('submitter', __name__, url_prefix='/submitter')
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
@@ -21,7 +21,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
 class TicketApi(MethodView):
     """api endpoint for tickets '/tickets/...' """
 
-    decorators = [multi_auth.login_required(role='developer')]
+    decorators = [multi_auth.login_required(role='submitter')]
 
     def get(self, ticket_id):
         if ticket_id:

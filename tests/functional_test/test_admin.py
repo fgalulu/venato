@@ -1006,3 +1006,13 @@ def test_user_project_delete_none_existing_authorised(client, authorised_admin):
     assert response.status_code == 404
     assert b'Not Found' in response.data
 
+
+def test_project_assignee(client, authorised_admin, new_project, new_user_project):
+    """
+    somsom
+    """
+    response = client.get(f'/admin/projects/{new_project.id}/users', headers={
+        'Authorization': f'Bearer {authorised_admin}'
+    })
+
+    assert response.status_code == 200

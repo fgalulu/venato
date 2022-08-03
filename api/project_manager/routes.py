@@ -6,7 +6,7 @@ from api.auth import multi_auth
 
 from api import db
 
-project_manager = Blueprint('project_manger', __name__)
+project_manager = Blueprint('project_manger', __name__, url_prefix='/pm')
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):

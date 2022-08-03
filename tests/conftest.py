@@ -25,7 +25,7 @@ def client(app):
 @pytest.fixture()
 def new_user(client):
     pwd = bcrypt.generate_password_hash('Pass1234!').decode('utf-8')
-    user = User(first_name='first', last_name='last', email='one@example.com', password=pwd)
+    user = User(first_name='first', last_name='last', email='one@example.com', password=pwd, role=Role.SUBMITTER)
     db.session.add(user)
     db.session.commit()
     yield user
@@ -35,6 +35,15 @@ def new_user(client):
 def new_admin(client):
     pwd = bcrypt.generate_password_hash('Pass1234!').decode('utf-8')
     admin = User(first_name='first', last_name='last', email='one@example.com', password=pwd, role=Role.ADMIN)
+    db.session.add(admin)
+    db.session.commit()
+    yield admin
+
+
+@pytest.fixture()
+def new_dev(client):
+    pwd = bcrypt.generate_password_hash('Pass1234!').decode('utf-8')
+    admin = User(first_name='first', last_name='last', email='one@example.com', password=pwd, role=Role.DEVELOPER)
     db.session.add(admin)
     db.session.commit()
     yield admin
@@ -53,6 +62,12 @@ def new_pm(client):
 @pytest.fixture()
 def authorised_admin(new_admin):
     token = new_admin.get_token()
+    yield token
+
+
+@pytest.fixture()
+def authorised_submitter(new_user):
+    token = new_user.get_token()
     yield token
 
 
