@@ -1,4 +1,4 @@
-from .models import Project, User, Ticket
+from .models import Project, User, Ticket, UserProjectManagement, UserTicketManagement
 from api import ma
 
 
@@ -7,15 +7,18 @@ class UserSchema(ma.SQLAlchemyAutoSchema):
         model = User
         exclude = ("password", "created_at", "updated_at")
 
+    role = ma.Function(lambda obj: obj.get_role(), dump_only=True)
+
 
 class ProjectSchema(ma.SQLAlchemyAutoSchema):
     class Meta:
         model = Project
         exclude = ("created_at", "updated_at")
 
-    author_name = ma.Function(lambda obj: obj.author.get_name(), dump_only=True)
-    supervisor_name = ma.Function(lambda obj: obj.supervisor.get_name(), dump_only=True)
-
+    project_author = ma.Nested(UserSchema)
+    supervisor = ma.Nested(UserSchema)
+    # user_assigned = ma.HyperlinkRelated("admin.project_assigned", dict(project_id='<id>'))
+    # tickets = ma.Nested(TicketSchema)
 
 
 class TicketSchema(ma.SQLAlchemyAutoSchema):
@@ -24,5 +27,23 @@ class TicketSchema(ma.SQLAlchemyAutoSchema):
         exclude = ("created_at", "updated_at")
         # include_fk = True
 
-    project_name = ma.Function(lambda obj: obj.project.get_name(), dump_only=True)
-    author_name = ma.Function(lambda obj: obj.author.get_name(), dump_only=True)
+    project = ma.Nested(ProjectSchema)
+    ticket_author = ma.Nested(UserSchema)
+
+
+class UserTicketSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserTicketManagement
+        # exclude = ("updated_at")
+
+    user = ma.Nested(UserSchema)
+    ticket = ma.Nested(TicketSchema)
+
+
+class UserProjectSchema(ma.SQLAlchemyAutoSchema):
+    class Meta:
+        model = UserProjectManagement
+        # exclude = ("updated_at")
+
+    user = ma.Nested(UserSchema)
+    project = ma.Nested(ProjectSchema)

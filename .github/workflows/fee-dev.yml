@@ -1,13 +1,10 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Python package
+name: Venato
 
 on:
   push:
-    branches: [ master ]
+    branches: [ fee-dev ]
   pull_request:
-    branches: [ master ]
+    branches: [ fee-dev ]
 
 jobs:
   build:
@@ -37,4 +34,4 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        python - m pytest
+        python -m pytest
