@@ -85,3 +85,28 @@ def test_register_invalid_json(client):
 
     assert response.status_code == 200
     assert b'success' in response.data
+
+
+def test_get_token(client, authorised_admin):
+    """
+        Get token while authorised
+    """
+    response = client.get('/token', headers={
+                'Authorization': f'Bearer {authorised_admin}'
+            })
+
+    assert response.status_code == 200
+    # assert b'{authorised_admin}' in response.data
+
+
+def test_get_token_unauthorised(client):
+    """
+        Get token while unauthorised, invalid token
+    """
+    response = client.get('/token', headers={
+                'Authorization': f'Bearer ejnjcnirgmkmckd54515dfmf'
+            })
+
+    assert response.status_code == 401
+    # assert b'{authorised_admin}' in response.data
+

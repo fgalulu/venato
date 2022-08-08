@@ -3,10 +3,11 @@ from flask.views import MethodView
 from api.models import User, Ticket, Project, UserProjectManagement, UserTicketManagement, Role
 from api.schema import TicketSchema, UserSchema, ProjectSchema, UserTicketSchema, UserProjectSchema
 from api.auth import multi_auth
+from api.errors import error_response
 
 from api import db
 
-project_manager = Blueprint('project_manger', __name__, url_prefix='/pm')
+project_manager = Blueprint('pm', __name__, url_prefix='/pm')
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
@@ -19,7 +20,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
 class TicketApi(MethodView):
     """api endpoint for tickets '/tickets/...' """
 
-    decorators = [multi_auth.login_required(role='developer')]
+    decorators = [multi_auth.login_required(role='pm')]
 
     def get(self, ticket_id):
         if ticket_id:
@@ -30,8 +31,8 @@ class TicketApi(MethodView):
         else:
             # return all tickets
             schema = TicketSchema(many=True)
-            qry = UserTicketManagement.query.filter_by(user_id=multi_auth.current_user())
-            tickets_assigned = Ticket.query.filter(UserTicketManagement).all()
+            qry = UserTicketManagement.query.filter_by(user_id=multi_auth.current_user().id).exists()
+            tickets_assigned = Ticket.query.filter(qry).all()
             return jsonify(schema.dump(tickets_assigned)), 200
 
     def post(self):
@@ -73,15 +74,14 @@ class TicketApi(MethodView):
 
 
 class UserAPI(MethodView):
-    """ api endpoint for users  /user/"""
+    """ api endpoint for users  /users/"""
 
-    decorators = [multi_auth.login_required(role='developer')]
+    decorators = [multi_auth.login_required(role='pm')]
 
     def get(self, user_id):
         if user_id:
             schema = UserSchema(many=False)
             user = User.query.get_or_404(user_id)
-            print(user.get_project())
             return jsonify(schema.dump(user)), 200
         else:
             # return all tickets
@@ -91,25 +91,65 @@ class UserAPI(MethodView):
 
 
 class ProjectAPI(MethodView):
-    """ api endpoint for projects  /project/"""
+    """ api endpoint for projects  /projects/"""
 
-    decorators = [multi_auth.login_required(role='developer')]
+    decorators = [multi_auth.login_required(role='pm')]
 
     def get(self, project_id):
         if project_id:
             schema = ProjectSchema()
-            project = Project.query.filter_by(supervisor=multi_auth.current_user()).first()
-            return jsonify(schema.dump(project)), 200
+            project = Project.query.filter(Project.supervised_by == multi_auth.current_user().id, Project.id == project_id).first()
+            if project:
+                return jsonify(schema.dump(project)), 200
+            else:
+                return error_response(404)
         else:
             schema = ProjectSchema(many=True)
             projects = Project.query.filter_by(supervisor=multi_auth.current_user()).all()
             return jsonify(schema.dump(projects)), 200
 
+    def post(self):
+        # create new project
+        data = request.get_json()
+        # print(multi_auth.current_user())
+        # print(token_auth.current_user())
+        # print(basic_auth.current_user())
+        supervisor = User.query.filter(User.role == 201).filter_by(id=data['supervisor']).first()
+        if supervisor:
+            project = Project(name=data['name'], description=data['desc'], project_author=multi_auth.current_user(),
+                              supervisor=supervisor, archived=False)
+            db.session.add(project)
+            db.session.commit()
+            return jsonify('success'), 201
+        else:
+            return jsonify("Supervisor doesnt exist."), 404
+
+    def put(self, project_id):
+        # update project
+        data = request.get_json()
+        project = Project.query.get_or_404(project_id)
+        supervisor = User.query.filter(User.role == 201).filter_by(id=data['supervisor']).first()
+        if supervisor:
+            project.name = data['name']
+            project.description = data['desc']
+            project.supervisor = supervisor
+            db.session.commit()
+            return jsonify('success'), 200
+        return jsonify("Supervisor doesnt exist."), 404
+
+    def delete(self, project_id):
+        # delete project
+        project = Project.query.get_or_404(project_id)
+        print(project)
+        db.session.delete(project)
+        db.session.commit()
+        return jsonify('Project deleted.'), 200
+
 
 class UserTicketAPI(MethodView):
     """ api endpoint for user ticket assignment """
 
-    decorators = [multi_auth.login_required(role='admin')]
+    decorators = [multi_auth.login_required(role='pm')]
 
     def get(self, user_ticket_id):
         if user_ticket_id:
@@ -125,8 +165,9 @@ class UserTicketAPI(MethodView):
 
     def post(self):
         data = request.get_json()
-        user_ticket = UserTicketManagement(user_id=data['user_id'], ticket_id=data['ticket_id'],
-                                           author=multi_auth.current_user())
+        ticket = Ticket.query.get_or_404(data['ticket_id'])
+        user = User.query.get_or_404(data['user_id'])
+        user_ticket = UserTicketManagement(user_id=user.id, ticket_id=ticket.id)
         db.session.add(user_ticket)
         db.session.commit()
         return jsonify('success'), 200
@@ -151,7 +192,7 @@ class UserTicketAPI(MethodView):
 class UserProjectAPI(MethodView):
     """ api endpoint for user ticket assignment """
 
-    decorators = [multi_auth.login_required(role='admin')]
+    decorators = [multi_auth.login_required(role='pm')]
 
     def get(self, user_project_id):
         if user_project_id:
@@ -167,7 +208,7 @@ class UserProjectAPI(MethodView):
         data = request.get_json()
         user = User.query.get_or_404(data['user_id'])
         project = Project.query.get_or_404(data['project_id'])
-        user_project = UserProjectManagement(user=user, project=project)
+        user_project = UserProjectManagement(user_id=user.id, project_id=project.id)
         db.session.add(user_project)
         db.session.commit()
         return jsonify('success'), 200
@@ -175,8 +216,10 @@ class UserProjectAPI(MethodView):
     def put(self, user_project_id):
         data = request.get_json()
         user_project = UserProjectManagement.query.get_or_404(user_project_id)
-        user_project.user_id = data['user_id']
-        user_project.project_id = data['project_id']
+        user = User.query.get_or_404(data['user_id'])
+        project = Project.query.get_or_404(data['project_id'])
+        user_project.user_id = user.id
+        user_project.project_id = project.id
         db.session.commit()
         return jsonify('success'), 200
 
@@ -188,7 +231,16 @@ class UserProjectAPI(MethodView):
 
 
 register_api(TicketApi, 'ticket_api', '/tickets/', pk='ticket_id')
-register_api(UserAPI, 'user_api', '/user/', pk='user_id')
-register_api(ProjectAPI, 'project_api', '/project/', pk='project_id')
+register_api(UserAPI, 'user_api', '/users/', pk='user_id')
+register_api(ProjectAPI, 'project_api', '/projects/', pk='project_id')
 register_api(UserTicketAPI, 'user_ticket_api', '/user-tickets/', pk='user_ticket_id')
 register_api(UserProjectAPI, 'user-project_api', '/user-projects/', pk='user_project_id')
+
+
+@project_manager.get('/projects/<int:project_id>/users')
+@multi_auth.login_required(role='pm')
+def project_assignee(project_id):
+    project = Project.query.get_or_404(project_id)
+    users = User.query.join(UserProjectManagement).filter(UserProjectManagement.project_id == project.id).all()
+    schema = UserSchema(many=True)
+    return jsonify({'project_id': project.id, 'members': schema.dump(users)})

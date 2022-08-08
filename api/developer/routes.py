@@ -4,6 +4,7 @@ from api import db
 from api.models import Project, Ticket, User, UserProjectManagement, UserTicketManagement
 from api.schema import TicketSchema, ProjectSchema, UserSchema
 from api.auth import multi_auth
+from api.errors import error_response
 
 
 developer = Blueprint('developer', __name__, url_prefix='/developer')
@@ -30,8 +31,8 @@ class TicketApi(MethodView):
         else:
             # return all tickets
             schema = TicketSchema(many=True)
-            qry = UserTicketManagement.query.filter_by(user_id=multi_auth.current_user())
-            tickets_assigned = Ticket.query.filter(UserTicketManagement).all()
+            qry = UserTicketManagement.query.filter_by(user_id=multi_auth.current_user().id).exists()
+            tickets_assigned = Ticket.query.filter(qry).all()
             return jsonify(schema.dump(tickets_assigned)), 200
 
     def post(self):
@@ -80,7 +81,7 @@ class UserAPI(MethodView):
         if user_id:
             schema = UserSchema(many=False)
             user = User.query.get_or_404(user_id)
-            print(user.get_project())
+            # print(user.get_project())
             return jsonify(schema.dump(user)), 200
         else:
             # return all tickets
@@ -97,14 +98,19 @@ class ProjectAPI(MethodView):
     def get(self, project_id):
         if project_id:
             schema = ProjectSchema()
-            project = Project.query.filter_by(user_assigned=multi_auth.current_user()).first()
-            return jsonify(schema.dump(project)), 200
+            qry = UserProjectManagement.query.filter_by(user_id=multi_auth.current_user().id).exists()
+            project = Project.query.filter(qry).first()
+            if project:
+                return jsonify(schema.dump(project)), 200
+            else:
+                return error_response(404)
         else:
             schema = ProjectSchema(many=True)
-            projects = Project.query.filter_by(user_assigned=multi_auth.current_user()).all()
+            qry = UserProjectManagement.query.filter_by(user_id=multi_auth.current_user().id).exists()
+            projects = Project.query.filter(qry).all()
             return jsonify(schema.dump(projects)), 200
 
 
 register_api(TicketApi, 'ticket_api', '/tickets/', pk='ticket_id')
-register_api(UserAPI, 'user_api', '/user/', pk='user_id')
-register_api(ProjectAPI, 'project_api', '/project/', pk='project_id')
+register_api(UserAPI, 'user_api', '/users/', pk='user_id')
+register_api(ProjectAPI, 'project_api', '/projects/', pk='project_id')

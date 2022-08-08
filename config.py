@@ -9,7 +9,7 @@ class Config(object):
     FLASK_APP = os.getenv('FLASK_APP')
     SQLALCHEMY_TRACK_MODIFICATIONS = os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
     SQLALCHEMY_DATABASE_URI = os.getenv('SQLALCHEMY_DATABASE_URI')
-    SQLALCHEMY_ECHO = True
+    # SQLALCHEMY_ECHO = True
     
 
 class DevelopmentConfig(Config):

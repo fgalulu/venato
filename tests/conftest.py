@@ -66,6 +66,18 @@ def authorised_admin(new_admin):
 
 
 @pytest.fixture()
+def authorised_dev(new_dev):
+    token = new_dev.get_token()
+    yield token
+
+
+@pytest.fixture()
+def authorised_pm(new_pm):
+    token = new_pm.get_token()
+    yield token
+
+
+@pytest.fixture()
 def authorised_submitter(new_user):
     token = new_user.get_token()
     yield token
@@ -99,8 +111,26 @@ def new_user_ticket(new_ticket, new_user):
 
 
 @pytest.fixture()
+def new_dev_ticket(new_ticket, new_dev):
+    dev_ticket = UserTicketManagement(user_id=new_dev.id, ticket_id=new_ticket.id)
+
+    db.session.add(dev_ticket)
+    db.session.commit()
+    yield dev_ticket
+
+
+@pytest.fixture()
 def new_user_project(new_project, new_user):
     user_project = UserProjectManagement(user_id=new_user.id, project_id=new_project.id)
+
+    db.session.add(user_project)
+    db.session.commit()
+    yield user_project
+
+
+@pytest.fixture()
+def new_dev_project(new_project, new_dev):
+    user_project = UserProjectManagement(user_id=new_dev.id, project_id=new_project.id)
 
     db.session.add(user_project)
     db.session.commit()

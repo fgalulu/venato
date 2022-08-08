@@ -32,7 +32,7 @@ class User(db.Model):
         if self.role == Role.ADMIN:
             return 'admin'
         elif self.role == Role.PROJECT_MANAGER:
-            return 'project manager'
+            return 'pm'
         elif self.role == Role.DEVELOPER:
             return 'developer'
         elif self.role == Role.SUBMITTER:

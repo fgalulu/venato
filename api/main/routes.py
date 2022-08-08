@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from api import db, bcrypt
-from api.auth import verify_password
+from api.auth import verify_password, multi_auth
 from api.models import User
 from api.errors import error_response
 
@@ -43,3 +43,12 @@ def register():
 
     else:
         return jsonify({'message': 'Error, something happened'}), 400
+
+
+@main.route('/token')
+@multi_auth.login_required
+def get_token():
+    token = multi_auth.current_user().get_token()
+    db.session.commit()
+    return jsonify({'token': token})
+
