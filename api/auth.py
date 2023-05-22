@@ -28,8 +28,23 @@ def verify_token(token):
 @token_auth.error_handler
 def token_auth_error(status):
     return error_response(status)
-
-
 @token_auth.get_user_roles
 def get_user_roles(user):
     return user.get_role()
+
+
+from flask import jsonify
+from api import db
+from api import admin
+from api.auth import basic_auth
+
+
+
+@admin.route('/tokens')
+@basic_auth.login_required
+def get_token():
+    token = basic_auth.current_user().get_token()
+    db.sesssion.commit()
+    return jsonify({'token': token})
+
+    

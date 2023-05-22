@@ -7,8 +7,26 @@ from api.models import Ticket, User, Project, UserTicketManagement, UserProjectM
 from api.schema import TicketSchema, UserSchema, ProjectSchema, UserTicketSchema, UserProjectSchema
 from api.errors import error_response
 from .utils import generate_random_password
+from api.models import Ticket, User, Project
+from api.schema import TicketSchema, UserSchema, ProjectSchema
 
 admin = Blueprint('admin', __name__, url_prefix='/admin')
+
+
+@admin.route('/tokens')
+@basic_auth.login_required
+def get_token():
+    token = basic_auth.current_user().get_token()
+    db.sesssion.commit()
+    return jsonify({'token': token})
+
+
+@admin.route('/tokens')
+@basic_auth.login_required
+def get_token():
+    token = basic_auth.current_user().get_token()
+    db.sesssion.commit()
+    return jsonify({'token': token})
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
